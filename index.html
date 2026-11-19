@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Wallpapers</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #121212;
+        color: #eee;
+        font-family: system-ui, sans-serif;
+        padding: 20px;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 24px;
+        font-weight: 500;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: #1e1e1e;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .card:hover {
+        transform: scale(1.02);
+      }
+      .card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        display: block;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        padding: 20px;
+      }
+      .modal.open {
+        display: flex;
+      }
+      .modal img {
+        max-width: 95%;
+        max-height: 80vh;
+        border-radius: 6px;
+      }
+      .actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 12px;
+      }
+      .btn {
+        padding: 10px 20px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .download {
+        background: #4caf50;
+        color: #fff;
+      }
+      .close {
+        background: #444;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wallpapers</h1>
+    <div class="grid" id="gallery">Loading wallpapers...</div>
+
+    <div
+      class="modal"
+      id="modal"
+      onclick="if (event.target === this) closeModal();"
+    >
+      <img id="modal-img" src="" alt="Preview" />
+      <div class="actions">
+        <a id="download-btn" class="btn download" href="" download
+          >Download Full Res</a
+        >
+        <button class="btn close" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+
+    <script>
+      const USERNAME = "notsuju";
+      const REPO = "wallpapers";
+      const FOLDER = "images";
+
+      async function loadWallpapers() {
+        const gallery = document.getElementById("gallery");
+        const url = `https://api.github.com/repos/${USERNAME}/${REPO}/contents/${FOLDER}`;
+        try {
+          const res = await fetch(url);
+          const files = await res.json();
+          const images = files.filter((f) =>
+            /\.(jpe?g|png|webp|gif)$/i.test(f.name),
+          );
+
+          if (!images.length) {
+            gallery.textContent = "No wallpapers found in the images folder.";
+            return;
+          }
+
+          gallery.innerHTML = "";
+          images.forEach((file) => {
+            const card = document.createElement("div");
+            card.className = "card";
+            const img = document.createElement("img");
+            img.src = file.download_url;
+            img.alt = file.name;
+            img.loading = "lazy";
+            card.onclick = () => openModal(file.download_url, file.name);
+            card.appendChild(img);
+            gallery.appendChild(card);
+          });
+        } catch (err) {
+          gallery.textContent =
+            "Failed to load wallpapers. Check your username and repo name.";
+        }
+      }
+
+      function openModal(url, name) {
+        document.getElementById("modal-img").src = url;
+        const dl = document.getElementById("download-btn");
+        dl.href = url;
+        dl.download = name;
+        document.getElementById("modal").classList.add("open");
+      }
+
+      function closeModal() {
+        document.getElementById("modal").classList.remove("open");
+      }
+
+      loadWallpapers();
+    </script>
+  </body>
+</html>
